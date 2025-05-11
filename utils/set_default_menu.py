@@ -10,8 +10,8 @@ async def set_main_menu(bot: Bot):
                    description='Submit a new report'),
         BotCommand(command='/cancel',
                    description='Cancel All'),
-        BotCommand(command='/admin',
-                   description='Go to the admin menu'),
+        # BotCommand(command='/admin',
+        #            description='Go to the admin menu'),
     ]
 
     await bot.set_my_commands(main_menu_commands)

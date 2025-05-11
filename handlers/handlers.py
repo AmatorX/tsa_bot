@@ -20,10 +20,14 @@ from utils.downloader import save_to_server_photos
 import os
 
 # Получить текущий путь к директории, где находится текущий файл
-current_dir = os.path.dirname(os.path.abspath(__file__))
+# current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Путь к файлу db.sqlite.3 относительно текущего файла
-db_path = os.path.join(current_dir, '../../tsa/db.sqlite')
+# db_path = os.path.join(current_dir, '../../TSA/db.sqlite3') # при работе локально
+# db_path = '/tsa/db.sqlite3' # при работе из докера
+db_path = '/app/db/db.sqlite3' # при работе из докера
+
+
 
 # Инициализируем роутер уровня модуля
 router: Router = Router()
@@ -49,8 +53,6 @@ async def process_start_command(message: Message):
 async def process_report_command(message: Message, state: FSMContext):
     await state.clear()
     try:
-        # Здесь добавляются данные для DATA, которые берутся из JSON
-        # Заменить на выборку из Базы Данных!
         name, sh_url, materials, building = get_user_info(message.from_user.id, db_path=db_path)
 
         if name:
@@ -90,8 +92,15 @@ async def select_building_material(event: Union[Message, CallbackQuery], state: 
     if isinstance(event, Message):
         # if re.fullmatch(r'^\d+([.,]\d+)?$', event.text):
         if re.fullmatch(r'^[1-9]\d*([.,]\d+)?$', event.text):
-            work_time = event.text.replace('.', ',')
-            check_num = float(event.text.replace(',', '.'))
+            ######################################################
+            # Отключил замену точек на запятые
+            # Замена запятых на точки для преобразования в число с плавающей запятой
+            work_time = event.text.replace(',', '.')
+            # Преобразование строки в число с плавающей запятой
+            check_num = float(work_time)
+
+            # work_time = event.text.replace('.', ',')
+            # check_num = float(event.text.replace(',', '.'))
             if check_num <= 15:
                 await state.update_data(work_time=work_time)
                 data = await state.get_data()
@@ -129,9 +138,16 @@ async def quantity_materials(callback: CallbackQuery, state: FSMContext):
 async def material_used(message: Message, state: FSMContext):
     data = await state.get_data()
     if re.fullmatch(r'^\d+([.,]\d+)?$', message.text):
+        ##########################################################
+        # Отключил замену точеек на запятые
         current_material = data.get('temp_material')
-        current_quantity = message.text.replace('.', ',')
-        check_num = message.text.replace(',', '.')
+        # Замена запятых на точки для преобразования в число с плавающей запятой
+        current_quantity = message.text.replace(',', '.')
+        # Преобразование строки в число с плавающей запятой
+        check_num = float(current_quantity)
+
+        # current_quantity = message.text.replace('.', ',')
+        # check_num = message.text.replace(',', '.')
         if float(check_num) <= 2000:
             data.pop('temp_material', None)  # Удаляем временный ключ
             # Теперь находим, или создаём новый, словарь материалов
