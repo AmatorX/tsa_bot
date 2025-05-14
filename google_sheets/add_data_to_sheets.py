@@ -1,3 +1,5 @@
+import os
+
 import gspread_asyncio
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -9,7 +11,9 @@ from utils.add_data_to_db import add_work_entry
 
 
 def get_creds():
-    creds = Credentials.from_service_account_file("./google_sheets_key.json")
+    creds_path = os.path.join(os.path.dirname(__file__), '..', 'google_sheets_key.json')
+    creds = Credentials.from_service_account_file(creds_path)
+    # creds = Credentials.from_service_account_file("./google_sheets_key.json")
     scoped = creds.with_scopes([
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/spreadsheets",

@@ -3,6 +3,8 @@ import sqlite3
 import json
 from datetime import datetime
 
+import pytz
+
 
 # def add_work_entry(worker_name: str, build_object_name: str, work_time: float, materials: dict):
 #
@@ -72,7 +74,9 @@ def add_work_entry(worker_name: str, build_object_name: str, work_time: float, m
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
+    timezone = pytz.timezone('America/Edmonton')
+    now = datetime.now(timezone)
+    today = now.date()
     try:
         # Проверить, существует ли рабочий с указанным именем
         cursor.execute("SELECT id FROM tsa_app_worker WHERE name = ?", (worker_name,))
@@ -89,7 +93,7 @@ def add_work_entry(worker_name: str, build_object_name: str, work_time: float, m
         build_object_id = build_object[0]
 
         # Проверить, есть ли запись за сегодня для этого рабочего и объекта строительства
-        today = datetime.now().date()
+
         cursor.execute("""
             SELECT id FROM tsa_app_workentry 
             WHERE worker_id = ? AND build_object_id = ? AND date = ?
