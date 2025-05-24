@@ -9,7 +9,7 @@ from middlewares.album_middleware import AlbumMiddleware
 from handlers import handlers, editing_handlers, admin_handlers
 from utils.set_default_menu import set_main_menu
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from utils.sheduler import no_report, remind_send_report, send_users_with_negative_statistics
+from utils.sheduler import no_report, remind_send_report, send_users_with_negative_statistics, send_admin_statistics_for_the_day_by_team
 
 
 # Функция конфигурирования и запуска бота
@@ -33,6 +33,7 @@ async def main() -> None:
     scheduler.add_job(remind_send_report, trigger='cron', day_of_week='mon-sat', hour=18, minute=5, kwargs={'bot': bot})
     scheduler.add_job(no_report, trigger='cron', day_of_week='mon-sat', hour=18, minute=30, kwargs={'bot': bot})
     scheduler.add_job(send_users_with_negative_statistics, trigger='cron', day_of_week='mon-sat', hour=19, minute=5, kwargs={'bot': bot})
+    scheduler.add_job(send_admin_statistics_for_the_day_by_team, trigger='cron', day_of_week='mon-sat', hour=21, minute=5, kwargs={'bot': bot})
     scheduler.start()
     dp.message.middleware(AlbumMiddleware())
     dp.startup.register(set_main_menu)

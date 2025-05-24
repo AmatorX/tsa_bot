@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+from datetime import date
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
@@ -10,6 +11,7 @@ from config_data.config import load_config, Config
 config: Config = load_config('.env')
 
 admin_send_remind_id = config.tg_bot.admin_send_remind_id
+admin_ids = config.tg_bot.admin_ids
 
 
 async def remind_send_report(bot: Bot):
@@ -316,3 +318,52 @@ async def no_report(bot: Bot):
                 foreman_tg_id,
                 text=f"Your workers did not send the report: {', '.join(workers_no_report)}"
             )
+
+
+async def send_admin_statistics_for_the_day_by_team(bot: Bot):
+    print("Запуск функции отправки статистики по командам за день")
+
+    today_str = date.today().strftime("%Y-%m-%d")
+    file_dir = "/app/db"
+    file_path = os.path.join(file_dir, f"{today_str}.txt")
+
+    if not os.path.exists(file_path):
+        for admin_id in admin_ids:
+            await bot.send_message(admin_id, f"The statistics file for {today_str} was not found.")
+        return
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        if not isinstance(data, dict):
+            raise ValueError("The file does not contain a valid dictionary.")
+
+        # Убираем пустые, None и нулевые значения
+        filtered_data = {
+            key: value for key, value in data.items()
+            if value not in (None, 0, 0.0, "", " ")
+        }
+
+        if not filtered_data:
+            for admin_id in admin_ids:
+                await bot.send_message(admin_id, "No meaningful statistics to display today.")
+            return
+
+        message_lines = ["📊 *Team statistics for today:*"]
+        for key, value in filtered_data.items():
+            message_lines.append(f"- `{key}`: *{value}*")
+
+        message = "\n".join(message_lines)
+
+        for admin_id in admin_ids:
+            await bot.send_message(
+                admin_id,
+                message,
+            )
+
+    except Exception as e:
+        error_msg = f"Error reading the file: {e}"
+        for admin_id in admin_ids:
+            await bot.send_message(admin_id, error_msg)
+

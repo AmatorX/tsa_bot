@@ -68,7 +68,7 @@ def add_work_entry(worker_name: str, build_object_name: str, work_time: float, m
     """
     print(f'Функция add_work_entry. Добавлены данные:\n'
           f'worker_name: {worker_name}, build_object_name: {build_object_name}, work_time: {work_time}, materials: {materials}')
-    # base_dir = os.path.dirname(os.path.abspath(__file__))  # Прни работе локально
+    # base_dir = os.path.dirname(os.path.abspath(__file__))  # При работе локально
     # db_path = os.path.join(base_dir, '../../TSA/db.sqlite3')
     db_path = '/app/db/db.sqlite3' # При работе из докера
 
@@ -77,6 +77,9 @@ def add_work_entry(worker_name: str, build_object_name: str, work_time: float, m
     timezone = pytz.timezone('America/Edmonton')
     now = datetime.now(timezone)
     today = now.date()
+    now_time = datetime.now(timezone).time()
+    now_time_str = now_time.strftime('%H:%M')
+
     try:
         # Проверить, существует ли рабочий с указанным именем
         cursor.execute("SELECT id FROM tsa_app_worker WHERE name = ?", (worker_name,))
@@ -103,18 +106,29 @@ def add_work_entry(worker_name: str, build_object_name: str, work_time: float, m
 
         if existing_entry:
             # Если запись уже существует, обновляем её
+            # cursor.execute("""
+            #     UPDATE tsa_app_workentry
+            #     SET worked_hours = ?, materials_used = ?
+            #     WHERE id = ?
+            # """, (work_time, json.dumps(materials), existing_entry[0]))
             cursor.execute("""
                 UPDATE tsa_app_workentry
-                SET worked_hours = ?, materials_used = ?
+                SET worked_hours = ?, materials_used = ?, created_time = ?
                 WHERE id = ?
-            """, (work_time, json.dumps(materials), existing_entry[0]))
+            """, (work_time, json.dumps(materials), now_time_str, existing_entry[0]))
             print("Work entry updated successfully.")
         else:
             # Если записи нет, добавляем новую
+            # cursor.execute("""
+            #     INSERT INTO tsa_app_workentry (worker_id, build_object_id, worked_hours, materials_used, date)
+            #     VALUES (?, ?, ?, ?, ?)
+            # """, (worker_id, build_object_id, work_time, json.dumps(materials), today))
+            # print("Work entry added successfully.")
+
             cursor.execute("""
-                INSERT INTO tsa_app_workentry (worker_id, build_object_id, worked_hours, materials_used, date)
-                VALUES (?, ?, ?, ?, ?)
-            """, (worker_id, build_object_id, work_time, json.dumps(materials), today))
+                INSERT INTO tsa_app_workentry (worker_id, build_object_id, worked_hours, materials_used, date, created_time)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (worker_id, build_object_id, work_time, json.dumps(materials), today, now_time_str))
             print("Work entry added successfully.")
 
         conn.commit()
