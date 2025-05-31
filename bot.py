@@ -48,8 +48,11 @@ async def main() -> None:
     except TelegramAPIError as err:
         logger.error(f"Telegram API Error: {err}")
     finally:
-        await bot.close()
-        logger.info('Bot closed')
+        try:
+            await bot.close()
+            logger.info('Bot closed')
+        except Exception as e:
+            logger.error(f"Error while closing bot: {e}")
 
 
 if __name__ == '__main__':
