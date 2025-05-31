@@ -1,8 +1,9 @@
 import json
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
+import pytz
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
 
@@ -322,8 +323,9 @@ async def no_report(bot: Bot):
 
 async def send_admin_statistics_for_the_day_by_team(bot: Bot):
     print("Запуск функции отправки статистики по командам за день")
+    tz = pytz.timezone("America/Edmonton")
+    today_str = datetime.now(tz).strftime("%Y-%m-%d")
 
-    today_str = date.today().strftime("%Y-%m-%d")
     file_dir = "/app/db"
     file_path = os.path.join(file_dir, f"{today_str}.txt")
 
